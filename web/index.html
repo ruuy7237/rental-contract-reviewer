@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>租房合同审查 Agent</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --ink:#1f2430; --muted:#6b7280;
+    --line:#e6e8ef; --brand:#2f6df0; --brand-soft:#eaf1ff;
+    --hi:#e5484d; --mid:#f5a623; --lo:#2da44e; --hi-soft:#fdecec; --mid-soft:#fdf3e0; --lo-soft:#e7f6ec;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    font-size:15px;line-height:1.6}
+  .wrap{max-width:860px;margin:0 auto;padding:24px 16px 60px}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  header h1{font-size:22px;margin:0}
+  .badge{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-weight:600}
+  .badge.mock{background:#f1f2f6;color:var(--muted)}
+  .hint{color:var(--muted);font-size:13px;margin:-6px 0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+  textarea{width:100%;min-height:170px;border:1px solid var(--line);border-radius:10px;
+    padding:12px;font-size:14px;font-family:inherit;resize:vertical;outline:none;background:#fff;color:var(--ink)}
+  textarea:focus{border-color:var(--brand)}
+  .row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
+  button{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:10px 18px;
+    font-size:15px;font-weight:600;cursor:pointer}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  button.ghost{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+  button.demo{background:#fff;color:var(--muted);border:1px solid var(--line)}
+  .summary{font-size:16px;font-weight:600;margin:2px 0 10px}
+  .overall{display:inline-block;font-size:13px;font-weight:700;padding:3px 12px;border-radius:999px;margin-left:8px}
+  .overall.高{background:var(--hi-soft);color:var(--hi)}
+  .overall.中{background:var(--mid-soft);color:#b7791f}
+  .overall.低{background:var(--lo-soft);color:var(--lo)}
+  .finding{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;background:#fff}
+  .finding .top{display:flex;align-items:center;gap:10px}
+  .lv{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px}
+  .lv.高{background:var(--hi-soft);color:var(--hi)}
+  .lv.中{background:var(--mid-soft);color:#b7791f}
+  .lv.低{background:var(--lo-soft);color:var(--lo)}
+  .cat{font-weight:700}
+  .finding .clause{margin:8px 0;padding:8px 10px;background:#f8f9fc;border-left:3px solid var(--brand);border-radius:6px;color:#374151;white-space:pre-wrap}
+  .finding .lbl{font-size:12px;color:var(--muted);font-weight:700;margin-top:6px}
+  .finding .txt{margin:2px 0 0}
+  .disclaimer{margin-top:14px;font-size:12px;color:var(--muted);background:#f8f9fc;border-radius:8px;padding:10px}
+  .stat{font-size:12px;color:var(--muted);margin-top:8px}
+  /* chat */
+  #chat{display:none}
+  .msgs{display:flex;flex-direction:column;gap:10px;min-height:80px;max-height:460px;overflow:auto;padding:4px}
+  .msg{max-width:86%;padding:10px 13px;border-radius:12px;white-space:pre-wrap;word-break:break-word}
+  .msg.user{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:4px}
+  .msg.bot{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:4px}
+  .chat-input{display:flex;gap:10px;margin-top:12px}
+  .chat-input input{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14px;outline:none;font-family:inherit}
+  .chat-input input:focus{border-color:var(--brand)}
+  .err{color:var(--hi);font-size:13px;margin-top:8px}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #cfd6e4;border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px}
+  a{color:var(--brand)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>租房合同审查 Agent</h1>
+    <span id="mode" class="badge">检测中…</span>
+  </header>
+  <p class="hint">把你的租房合同全文粘到下面（从 PDF/Word 复制文字即可），点「审查合同」揪出坑；之后可在下方继续追问，像聊天一样一问一答。</p>
+
+  <div class="card">
+    <textarea id="contract" placeholder="在此粘贴房屋租赁合同全文……&#10;例如：租期25年，付款方式押三付一；租赁期内甲方可随时进入房屋；无论何种原因乙方提前退租押金不予退还……"></textarea>
+    <div class="row">
+      <button id="reviewBtn">审查合同</button>
+      <button class="demo" id="demoBtn">填入示例合同</button>
+      <button class="ghost" id="clearBtn">清空</button>
+    </div>
+    <div id="reviewErr" class="err"></div>
+  </div>
+
+  <div class="card" id="reportCard" style="display:none">
+    <div class="summary" id="summary"></div>
+    <div id="findings"></div>
+    <div class="disclaimer" id="disclaimer"></div>
+    <div class="stat" id="stat"></div>
+  </div>
+
+  <div class="card" id="chat">
+    <div style="font-weight:700;margin-bottom:8px">继续追问（针对这份合同）</div>
+    <div class="msgs" id="msgs"></div>
+    <div class="chat-input">
+      <input id="q" placeholder="比如：这条押金不退的条款合法吗？帮我改一下违约金条款" />
+      <button id="sendBtn">发送</button>
+    </div>
+  </div>
+
+  <footer>纯本地运行 · 合同不会离开你的电脑 · 仅供信息参考，不构成法律意见</footer>
+</div>
+
+<script>
+const $ = (s)=>document.querySelector(s);
+const DEMO = "房屋租赁合同\n\n甲方（房东）：王某\n乙方（租客）：李某\n\n一、租赁标的：北京市朝阳区某小区1室。\n二、租赁期限：租期25年，自签约之日起算。\n三、租金与押金：月租金3000元，付款方式押三付一。\n四、房屋使用：租赁期内，甲方可随时进入房屋查看情况。\n五、提前退租：无论何种原因乙方提前退租，押金不予退还。\n六、维修责任：房屋及设施的一切维修费用均由乙方承担。\n七、其他：乙方不得对合同条款提出任何异议；电费按1.5元/度收取。";
+
+let history = [];
+let lastReport = null;
+
+async function status(){
+  try{
+    const r = await fetch("/api/status"); const d = await r.json();
+    const el = $("#mode");
+    if(d.mode==="api"){ el.textContent = "真实模型 · "+d.model; el.className="badge"; }
+    else { el.textContent = "离线规则模式（未检测到 Key）"; el.className="badge mock"; }
+  }catch(e){ $("#mode").textContent="状态未知"; }
+}
+status();
+
+$("#demoBtn").onclick = ()=>{ $("#contract").value = DEMO; $("#reviewErr").textContent=""; };
+$("#clearBtn").onclick = ()=>{ $("#contract").value=""; };
+
+$("#reviewBtn").onclick = async ()=>{
+  const text = $("#contract").value.trim();
+  if(!text){ $("#reviewErr").textContent="请先粘贴合同内容。"; return; }
+  $("#reviewErr").textContent="";
+  const btn = $("#reviewBtn"); btn.disabled=true; btn.innerHTML='<span class="spinner"></span>审查中…';
+  try{
+    const r = await fetch("/api/review",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text})});
+    const d = await r.json().catch(()=>null);
+    if(!d){ $("#reviewErr").textContent="服务器没有返回数据——多半是本地服务已停止，请重新启动它。"; return; }
+    if(d.error){ $("#reviewErr").textContent="审查失败："+d.error; return; }
+    renderReport(d);
+    lastReport = d; history = []; $("#msgs").innerHTML="";
+    $("#chat").style.display="block";
+    $("#chat").scrollIntoView({behavior:"smooth"});
+  }catch(e){ $("#reviewErr").textContent="网络请求失败："+e.message+"（多半是本地服务已停止，请重新启动）"; }
+  finally{ btn.disabled=false; btn.textContent="审查合同"; }
+};
+
+function renderReport(d){
+  $("#reportCard").style.display="block";
+  $("#summary").innerHTML = "总评：" + (d.summary||"") + ' <span class="overall '+(d.overall_risk||"")+'">'+(d.overall_risk||"")+"风险</span>";
+  const fc = $("#findings"); fc.innerHTML="";
+  const fs = d.findings||[];
+  if(!fs.length){ fc.innerHTML='<div class="finding"><div class="cat">未发现明显问题条款</div><div class="txt" style="color:#6b7280">仍建议保留证据、看清附加条件。</div></div>'; }
+  fs.forEach(f=>{
+    const div=document.createElement("div"); div.className="finding";
+    div.innerHTML = '<div class="top"><span class="lv '+f.risk_level+'">'+f.risk_level+'风险</span><span class="cat">'+esc(f.category)+'</span></div>'
+      + '<div class="lbl">问题条款</div><div class="clause">'+esc(f.clause||"（未摘录到原文）")+'</div>'
+      + '<div class="lbl">法律依据</div><div class="txt">'+esc(f.legal_basis||"")+'</div>'
+      + '<div class="lbl">修改建议</div><div class="txt">'+esc(f.suggestion||"")+'</div>';
+    fc.appendChild(div);
+  });
+  $("#disclaimer").textContent = d.disclaimer||"";
+  $("#stat").textContent = "风险点 "+(fs.length)+" 个 · 工具调用 "+(d.tool_calls||0)+" 次 · 步数 "+(d.steps||0);
+}
+
+$("#sendBtn").onclick = sendQ;
+$("#q").addEventListener("keydown",e=>{ if(e.key==="Enter") sendQ(); });
+
+async function sendQ(){
+  const q = $("#q").value.trim();
+  if(!q) return;
+  const contract = $("#contract").value;
+  addMsg("user", q); history.push({role:"user",content:q}); $("#q").value="";
+  const btn=$("#sendBtn"); btn.disabled=true;
+  addMsg("bot","<span class='spinner'></span>思考中…",true);
+  try{
+    const r = await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({contract, question:q, history})});
+    const d = await r.json().catch(()=>null);
+    const bubbles = document.querySelectorAll("#msgs .msg.bot");
+    const last = bubbles[bubbles.length-1];
+    if(!d || d.error){
+      last.textContent = "出错了：" + ((d && d.error) || "服务器无响应，请看启动窗口里的报错信息");
+    } else {
+      const ans = d.answer || "（无回答）";
+      history.push({role:"assistant",content:ans});
+      last.textContent = esc(ans);
+    }
+  }catch(e){
+    const bubbles = document.querySelectorAll("#msgs .msg.bot");
+    bubbles[bubbles.length-1].textContent = "网络请求失败：" + e.message + "（多半是本地服务已停止，请重新启动）";
+  }
+  finally{ btn.disabled=false; }
+}
+
+function addMsg(role, html, isHtml){
+  const div=document.createElement("div"); div.className="msg "+role;
+  if(isHtml) div.innerHTML=html; else div.textContent=html;
+  $("#msgs").appendChild(div);
+  $("#msgs").scrollTop = $("#msgs").scrollHeight;
+}
+function esc(s){ return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+</script>
+</body>
+</html>

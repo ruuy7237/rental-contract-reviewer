@@ -1,0 +1,5 @@
+{
+  "sample_bad_contract.txt": ["25 年", "押三", "随时进入", "押金不予退还", "一切维修", "1.5", "异议", "提前收回"],
+  "sample_medium_contract.txt": ["随时进入", "1.5"],
+  "sample_clean_contract.txt": []
+}

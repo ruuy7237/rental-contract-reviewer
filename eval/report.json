@@ -1,0 +1,24 @@
+{
+  "baseline_recall": 100.0,
+  "real_recall": null,
+  "rows": [
+    {
+      "file": "sample_bad_contract.txt",
+      "expected": 8,
+      "baseline_hit": 8,
+      "baseline_recall": 1.0
+    },
+    {
+      "file": "sample_medium_contract.txt",
+      "expected": 2,
+      "baseline_hit": 2,
+      "baseline_recall": 1.0
+    },
+    {
+      "file": "sample_clean_contract.txt",
+      "expected": 0,
+      "baseline_hit": 0,
+      "baseline_recall": null
+    }
+  ]
+}
